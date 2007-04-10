@@ -20,7 +20,7 @@ setup(
     install_requires=[
     'setuptools',
     'pyode >= 1.2.0',
-    'pygame >= 1.7.1',
+#    'pygame >= 1.7.1',
     ],
     # required for py2exe
     windows=[
