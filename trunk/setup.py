@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
     name='DamBuilder',
-    version='1.0',
+    version='1.0.1',
     author='Faraway (Martijn Faassen, Felicia Wong)',
     author_email='faassen@startifact.com',
     description="Dam Builder",
