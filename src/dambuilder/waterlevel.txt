@@ -1,0 +1,132 @@
+Waterlevel
+==========
+
+The world has a system of connected water levels::
+
+We create the level of the water in the sea, 3 meters, and we also
+create the water level on land, 0 meters::
+
+  >>> from dambuilder import waterlevel
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+
+The sea and land water levels are connected by a stream of 0.1 meters
+per second. This means that the higher level will lose 0.1 meters per
+second of water (and will go lower by that amount), and that the lower
+level will gain 0.1 meters per second of water (and will thus
+rise). Note that this is a silly model that doesn't take total volume
+into account, but that's because we don't need it::
+
+  >>> world.connect('sea_to_land', sea, land, 0.1)
+
+Let's simulate a single second::
+
+  >>> world.step(1.0)
+
+We now expect the water level of the sea to be lower by 0.1 meters::
+
+  >>> approx(sea.level, 2.9)
+  True
+
+The land water level is higher by 0.1 meters::
+
+  >>> approx(land.level, 0.1)
+  True
+
+Let's simulate two seconds more::
+
+  >>> world.step(2.0)
+  >>> approx(sea.level, 2.7)
+  True
+  >>> approx(land.level, 0.3)
+  True
+
+After a while, the land level should be approximately the sea level, each
+1.5 meters::
+
+  >>> world.step(100.)
+  >>> approx(sea.level, land.level)
+  True
+  >>> approx(sea.level, 1.5)
+  True
+  >>> approx(land.level, 1.5)
+  True
+
+We can also reach that same state by having many smaller steps:
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+  >>> world.connect('sea_to_land', sea, land, 0.1)
+  >>> for i in range(100):
+  ...   world.step(1)
+  >>> approx(sea.level, land.level)
+  True
+  >>> approx(sea.level, 1.5)
+  True
+  >>> approx(land.level, 1.5)
+  True
+
+It's possible to disconnect connections that were previously made::
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+  >>> world.connect('sea_to_land', sea, land, 0.1)
+  >>> world.disconnect('sea_to_land')
+  >>> world.step(20.)
+  >>> approx(sea.level, 3)
+  True
+  >>> approx(land.level, 0)
+  True
+
+If the water level we flow from is lower than the water level we flow to,
+the flow goes backwards::
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 0)
+  >>> land = world.add_level('land', 3)
+  >>> world.connect('sea_to_land', sea, land, 0.1)
+  >>> world.step(1.)
+  >>> approx(sea.level, 0.1)
+  True
+  >>> approx(land.level, 2.9)
+  True
+
+It's also possible to set up negative flow. This sets up a flow from
+the land to the sea of -0.1, which is equivalent to flow from sea to land
+of 0.1::
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+  >>> world.connect('sea_to_land', land, sea, -0.1)
+  >>> world.step(1.)
+  >>> approx(sea.level, 2.9)
+  True
+  >>> approx(land.level, 0.1)
+  True
+
+A water source can be connected too, but just has input and
+does not have a water itself::
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+  >>> icecaps = world.add_source('icecaps')
+  >>> world.connect('icecaps_to_sea', icecaps, sea, 0.1)
+  >>> world.step(1.)
+  >>> approx(sea.level, 3.1)
+  True
+
+We cannot flow water back into a source::
+
+  >>> world = waterlevel.World()
+  >>> sea = world.add_level('sea', 3)
+  >>> land = world.add_level('land', 0)
+  >>> icecaps = world.add_source('icecaps')
+  >>> world.connect('sea_to_icecaps', sea, icecaps, 0.1)
+  Traceback (most recent call last):
+    ...
+  WaterlevelError: Cannot flow water into source.

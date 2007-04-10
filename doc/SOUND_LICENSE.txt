@@ -1,0 +1,35 @@
+License
+=======
+
+These works are licensed under the Creative Commons Sampling Plus 1.0
+License. To view a copy of this license, visit
+http://creativecommons.org/licenses/sampling+/1.0/ or send a letter to
+Creative Commons, 543 Howard Street, 5th Floor, San Francisco,
+California, 94105, USA.
+
+Attributions
+------------
+
+File:
+        Name: "FingerPlop4.wav"
+        Url: http://freesound.iua.upf.edu/samplesViewSingle.php?id=25880
+        Date of upload: 2006-11-16 13:15:09
+Designer / Creator / Uploader:
+        Name: "acclivity"
+        Url: http://freesound.iua.upf.edu/usersViewSingle.php?id=37876
+	
+File:
+        Name: "construction metal lumber.wav"
+        Url: http://freesound.iua.upf.edu/samplesViewSingle.php?id=32734
+        Date of upload: 2007-03-25
+Designer / Creator / Uploader:
+        Name: "cognito perceptu"
+        Url: http://freesound.iua.upf.edu/usersViewSingle.php?id=57789
+
+File:
+        Name: "33326_laya_rez_fx.wav"
+        Url: http://freesound.iua.upf.edu/samplesViewSingle.php?id=33326
+        Data of upload: 2007-04-05
+Designer / Creator / Uploader:
+        Name: "laya"
+        Url: http://freesound.iua.upf.edu/usersViewSingle.php?id=105356
