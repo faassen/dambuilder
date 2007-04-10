@@ -1,0 +1,106 @@
+A view
+------
+
+The simulation spreads out over more space than we can see at once
+on the screen. We'll define a view of 800 * 500 pixels. This view
+should scale real measurements at 64 pixels per meter. We start out
+viewing it with the origin at 0.0, 0.0 meters::
+
+  >>> from dambuilder.view import View
+  >>> view = View(800, 500, 64, 0.0, 0.0)
+
+x 0, y 0 should now show up at coordinates 0, 500::
+
+  >>> view.coord(0, 0)
+  (0, 500)
+
+x 1, y 1  should show up at coordinates 64, 436::
+
+  >>> view.coord(1, 1)
+  (64, 436)
+
+Let's change the origin to be 10 meters up::
+
+  >>> view.set_origin(0, 10)
+
+x 1, y 10 should show up at coordinates 64, 500::
+
+  >>> view.coord(1, 10)
+  (64, 500)
+ 
+Let's change the original to be 10 meters to the right::
+
+  >>> view.set_origin(10, 0)
+ 
+x 10, y 0 should show at up at coordinates 0, 500::
+
+  >>> view.coord(10, 0)
+  (0, 500)
+
+Now let's aim to keep the beaver centered. If the beaver is in an area
+more to the left than half the width of the screen and lower than half the
+height of the screen, the origin stays at 0, 0::
+  
+  >>> view.set_view(0, 0)
+  >>> view.get_origin()
+  (0.0, 0.0)
+
+If the beaver moves more than halfway to the right the screen, the
+origin adjust itself to keep the beaver centered::
+
+  >>> view.set_view(6.5, 0)
+  >>> view.get_origin()
+  (0.25, 0.0)
+
+The same applies if the beaver goes up more than half the screen::
+
+  >>> view.set_view(0, 4)
+  >>> x, y = view.get_origin()
+  >>> approx(x, 0.0)
+  True
+  >>> approx(y, 0.09375)
+  True
+
+Something in the view is visible if its pixel coordinates fit in there::
+
+  >>> view.set_view(0, 0)
+
+In the picture::
+
+  >>> view.visible((0, 0), 10, 10)
+  True
+
+Still in the picture, though clipped::
+
+  >>> view.visible((780, 400), 30, 30)
+  True
+
+Too far to the right:
+
+  >>> view.visible((800, 300), 10, 10)
+  False
+
+Too far to the left::
+
+  >>> view.visible((-100, 100), 10, 10)
+  False
+
+Too far down::
+  
+  >>> view.visible((100, 500), 10, 10)
+  False
+
+Far to the left, but still visible as it's huge::
+  
+  >>> view.visible((-100, 100), 150, 10)
+  True
+
+Too high up::
+
+  >>> view.visible((0, -100), 10, 10)
+  False
+
+High up but still visible as it's huge::
+  
+  >>> view.visible((100, -100), 100, 150)
+  True

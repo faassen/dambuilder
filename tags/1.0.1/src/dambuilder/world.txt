@@ -1,0 +1,288 @@
+World
+=====
+
+The world is initially a single area of height 0 with no water::
+
+  >>> from dambuilder import world
+  >>> w = world.World()
+
+The height is 0.0 everywhere::
+
+  >>> approx(w.get_height(0), 0)
+  True
+  >>> approx(w.get_height(10), 0)
+  True
+  >>> approx(w.get_height(100), 0)
+  True
+
+And so is the water level::
+  
+  >>> approx(w.get_waterlevel(0).level, 0)
+  True
+  >>> approx(w.get_waterlevel(10).level, 0)
+  True
+  >>> approx(w.get_waterlevel(100).level, 0)
+  True
+
+Now let's put a dam in the world at 6 meters in, 1 meter thick
+and 3 meters high::
+
+  >>> w.add_dam('sea', MockGeomBox(6., 1.5, 1., 3.))
+  <dambuilder.dam.Dam object at ...>
+
+The height of the dam area is 3 meters::
+
+  >>> approx(w.get_height(5.6), 3.)
+  True
+  >>> approx(w.get_height(6.3), 3.)
+  True
+
+Unlike the rest of the world::
+
+  >>> approx(w.get_height(1), 0.)
+  True
+  >>> approx(w.get_height(7), 0.)
+  True
+
+Let's put 2 meters of water on the right side of the dam::
+
+  >>> w.get_waterlevel(7).level = 2.0
+ 
+It's 2 meters everywhere on that side now::
+
+  >>> approx(w.get_waterlevel(10).level, 2.0)
+  True
+
+But no water is on the left side::
+
+  >>> approx(w.get_waterlevel(1).level, 0.0)
+  True
+
+The dam isn't flooded, so it doesn't have water either::
+
+  >>> approx(w.get_waterlevel(6).level, 0.0)
+  True
+
+Flooding dam
+------------
+
+Let's flood the dam by raising the waterlevel to 4 meters (above the dam's
+3 meters)::
+  
+  >>> w.get_waterlevel(10).level = 4.
+
+The dam knows it's flooded::
+  
+  >>> w.get_dam(6.).is_flooded()
+  True
+
+The waterlevel of the dam is now equal to that of the level that's flooding
+it::
+
+  >>> approx(w.get_waterlevel(6.).level, 4.)
+  True
+
+The dam will now leak water to the other location. Eventually one side
+will stop flooding (at 3 meters). The other side will have gained 1.0 meter
+of water::
+
+  >>> for i in range(100):
+  ...     w.step_water(1)
+  >>> approx(w.get_waterlevel(1).level, 1.)
+  True
+  >>> approx(w.get_waterlevel(10).level, 3.)
+  True
+
+Leaking dam
+-----------
+
+A dam can also get a leak at a certain height. Let's introduce a leak at
+2.5 meters high::
+
+  >>> dam = w.get_dam(6.)
+  >>> dam.add_leak(w, 2.5, .1)
+
+We will now let the leak continue for a while::
+
+  >>> for i in range(100):
+  ...     w.step_water(1)
+
+We expect the water on the right side to be 2.5 meters high, and on the
+left side it should be 1.5 meters::
+
+  >>> approx(w.get_waterlevel(10).level, 2.5)
+  True
+  >>> approx(w.get_waterlevel(1).level, 1.5)
+  True
+
+As soon as the waterlevel raises above 2.5 meters again, the leak will
+start up again::
+
+  >>> w.get_waterlevel(10).level = 2.75
+  >>> for i in range(100):
+  ...    w.step_water(1)
+  >>> approx(w.get_waterlevel(10).level, 2.5)
+  True
+  >>> approx(w.get_waterlevel(1).level, 1.75)
+  True
+
+The leak should also leak in the other direction::
+
+  >>> w.get_waterlevel(1).level = 3.
+  >>> w.get_waterlevel(10).level = 0.
+  >>> for i in range(100):
+  ...    w.step_water(1)
+  >>> approx(w.get_waterlevel(1).level, 2.5)
+  True
+  >>> approx(w.get_waterlevel(10).level, 0.5)
+  True
+
+Adjusting the flow
+------------------
+
+The beaver can actually plug holes. Let's create a new world with a
+new dam, 8 meters high::
+
+  >>> from dambuilder import world
+  >>> w = world.World()
+
+  >>> dam = w.add_dam('sea', MockGeomBox(6., 4, 1., 8.))
+
+  >>> sea = w.get_waterlevel(10)
+  >>> land = w.get_waterlevel(1)
+  >>> sea.level = 7
+
+Oh no, a leak at height 3!
+
+  >>> dam.add_leak(w, 6, 0.1)
+  >>> leaks= dam.get_leaks_at(6, 1)
+  >>> len(leaks)
+  1
+  >>> leak = leaks[0]
+  >>> approx(leak.rate, 0.1)
+  True
+
+This will result in a water connection after an update of the dam::
+
+  >>> dam.update_leaks(w)
+  >>> w.get_water_world().have_connection(leak.connection_id)
+  True
+
+The beaver will rush to fix it, with wood, covering an area 1 meter high,
+centered at height 5.6. He will fix half of it, which is why the
+result is not yet True::
+
+  >>> from dambuilder.constants import WOOD, STONE
+  >>> dam.fix_leaks_at(w, 5.6, 1, 0.05, WOOD)
+  False
+
+The leak should now be reduced::
+
+  >>> approx(leak.rate, 0.05)
+  True
+  
+If the beaver tries to fix the dam in the wrong place, nothing happens and
+the leak rate is still the same::
+
+  >>> dam.fix_leaks_at(w, 4, 1, 0.05, WOOD)
+  False
+  >>> approx(leak.rate, 0.05)
+  True
+
+The beaver will fix the leak to a level so small it will be plugged::
+
+  >>> dam.fix_leaks_at(w, 5.6, 1, 0.07, WOOD)
+  True
+
+The leak is now gone::
+
+  >>> dam.get_leaks_at(6, 1)
+  []
+
+The connection in the water world is also gone::
+
+  >>> w.get_water_world().have_connection(leak.connection_id)
+  False
+
+It's also possible for the beaver to fix a leak that isn't leaking yet. Let's
+make a new leak so high up it isn't leaking::
+
+  >>> dam.add_leak(w, 7.5, 0.1)
+  >>> dam.update_leaks(w)
+  >>> w.get_water_world().have_connection(leak.connection_id)
+  False
+
+Now we fix it::
+
+  >>> dam.fix_leaks_at(w, 7.5, 1, 0.2, STONE)
+  True
+  >>> dam.get_leaks_at(7.5, 1)
+  []
+
+We used stone for this leak, so we expect stone to be there::
+
+  >>> dam.get_material(7.5) is STONE
+  True
+
+Building a dam
+--------------
+
+Let's make a new dam, this time a multiple of SECTION_HEIGHTs high::
+
+  >>> from dambuilder.material import SECTION_HEIGHT
+  >>> from dambuilder import world
+  >>> w = world.World()
+  >>> dam = w.add_dam('sea', MockGeomBox(6., 5 * SECTION_HEIGHT, 
+  ...                                    1., 10 * SECTION_HEIGHT))
+
+A dam is made of different kinds of material::
+
+  >>> from dambuilder.material import WOOD, STONE, BRICK, METAL
+
+The initial dam is made of wood all the way up::
+
+  >>> dam.get_material(SECTION_HEIGHT) is WOOD
+  True
+
+  >>> dam.get_material(3 * SECTION_HEIGHT) is WOOD
+  True
+
+Of course when we check higher than the dam is high, there's nothing::
+
+  >>> dam.get_material(11 * SECTION_HEIGHT) is None
+  True
+
+If the beaver is on top of the dam, he can build up the dam with a
+material::
+
+  >>> original_height = dam.height
+  >>> dam.build_up(WOOD)
+
+The dam is SECTION_HEIGHT higher now (as that's the size of a material)::
+
+   >>> approx(dam.height - original_height, SECTION_HEIGHT)
+   True
+
+The material is made of wood in this new section::
+
+   >>> dam.get_material(original_height + SECTION_HEIGHT / 2.) is WOOD
+   True
+
+Now let's add some stone::
+
+   >>> dam.build_up(STONE)
+
+The dam is 2 section heights higher now::
+
+  >>> approx(dam.height - original_height, 2 * SECTION_HEIGHT)
+  True
+
+The area that high up is made of stone::
+
+  >>> dam.get_material(original_height + SECTION_HEIGHT + SECTION_HEIGHT / 2) is STONE
+  True
+   
+Multiple dams
+-------------
+
+TBD
