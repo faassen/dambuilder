@@ -1,0 +1,85 @@
+Installation
+============
+
+On Windows
+----------
+
+Unpack the dambuilder-0.9.zip file. Click on 'dambuilder.exe'. That's it.
+
+On Linux
+--------
+
+Requirements:
+
+* Python 2.4
+
+* Pygame 1.7.1
+
+* ODE 0.8
+
+* PyODE 1.2.0
+
+* Pygame dependencies, as Ubuntu packages (libSDL with all options
+  Pygame can use):
+
+  * libsdl1.2-dev
+
+  * libsdl-ttf2.0.0
+
+  * libsdl-ttf2.0-dev (this doesn't seem to pull in libsdl-ttf2.0.0 on Ubuntu!)
+
+  * libsdl-image1.2-dev
+
+  * libsdl-mixer1.2-dev
+
+  * libsmpeg-dev (probably not strictly necessary)
+
+Start the game by running 'run_game.py' or 'dambuilder_game.py'.
+
+Note that the list of requirements above seems ominous, but if you're
+in Linux, you can use 'buildout' to make things go a bit more
+automatic. See the explanation below.
+
+Source on Windows
+-----------------
+
+To use the source, you need the following installed:
+
+* Python 2.4
+
+* PyGame 1.7.1
+
+* PyODE 1.2.0
+
+You can then start the game by clicking on run_game.py or
+dambuilder_game.py.
+
+Extensions that can be built with Buildout
+------------------------------------------
+
+Note that on Linux (and likely MacOS X as well) you can build and
+install the following extensions automatically (all in the Dambuilder
+project directory, no need to become root), using buildout:
+
+* Pygame 1.7.1
+
+* ODE 0.8
+
+* PyODE 1.2.0
+
+To do this you need to have the buildout source package for
+Dambuilder. This includes an 'install' directory and a special version
+of zc.recipe.cmmi. Then::
+
+  $ cd dambuilder
+
+  $ python2.4 bootstrap.py
+
+  $ bin/buildout
+
+And wait. If pygame complains that it cannot find all the SDL-related
+libraries, Ctrl-C out and install the dev packages listed above first.
+
+After a buildout, you can run the game using:
+
+  $ bin/dambuilder
